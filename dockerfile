@@ -30,6 +30,7 @@ RUN export ND_ENTRYPOINT="/mainscript.sh" \
            time \
            procps \
            unzip \
+           r-base \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \

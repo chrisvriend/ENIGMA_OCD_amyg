@@ -2,8 +2,8 @@
 
 
 # (C) C.Vriend - 1/1/2020
-# code written as part of ENIGMA OCD for subsegmentation of the thalamus
-# script to run FreeSurfer on T1 and subsequently perform thalamic subsegmentation
+# code written as part of ENIGMA OCD for subsegmentation of the amygdala and hippocampus
+# script to run FreeSurfer on T1 and subsequently perform the subsegmentation
 # script assumes that images are organized according to BIDS format
 
 # source directories
@@ -314,10 +314,10 @@ if [ ! -f ${outputdir}/${subj}/mri/wmparc.mgz ] \
       fi
 
 
-elif [ -f ${outputdir}/${subj}/stats/hipposubfields.lh.T1.${vers}.stats ] \
-|| [ -f ${outputdir}/${subj}/stats/hipposubfields.rh.T1.${vers}.stats ] \
-|| [ -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ] \
-|| [ -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ]; then
+elif [ ! -f ${outputdir}/${subj}/stats/hipposubfields.lh.T1.${vers}.stats ] \
+|| [ ! -f ${outputdir}/${subj}/stats/hipposubfields.rh.T1.${vers}.stats ] \
+|| [ ! -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ] \
+|| [ ! -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ]; then
 echo "recon-all already completed"
 echo "continue to hippocampal / amygdala subsegmentation"
 
@@ -335,7 +335,7 @@ elif [ ! -f ${outputdir}/${subj}/mri/hipamygwm.nii.gz ] \
 || [ $(cat ${outputdir}/${subj}/QC/${subj}_WM_overlap.txt | wc -l) -lt 1 ]; then
 
 		echo "recon-all already completed"
-		echo " thalamus subsegmentation already completed"
+		echo " amygdalar and hippocampal subsegmentation already completed"
 		echo "continue with QA steps"
 
 		/neurodocker/combine_subnuclei.sh ${outputdir} ${subj} | tee ${outputdir}/${subj}_QAsteps.log &
@@ -347,7 +347,7 @@ elif [ ! -f ${outputdir}/${subj}/mri/hipamygwm.nii.gz ] \
 
 else
 		echo "recon-all already completed"
-		echo " thalamus subsegmentation already completed"
+		echo " amygdalar and hippocampal subsegmentation already completed"
 		echo "single subject QA steps already completed"
 		echo " continue with the next subject"
 
@@ -389,7 +389,7 @@ for subj in ${subjects}; do
 if [ ! -f ${subj}/stats/aseg.stats ]; then
 echo "aseg.stats does not exist for ${subj}"
 echo "this file is necessary to extract ICV"
-echo "and the native thalamus segmentation"
+echo "and the native amygdala / hippocampus segmentation"
 echo " "
 echo "rerun the script for this subject or remove the folder from the output directory ="
 echo "${outputdir}"
@@ -454,10 +454,10 @@ fi
 
 done
 
-echo "extracting ICV and Freesurfer native thalamus volume "
+echo "extracting ICV and Freesurfer native amygdala and hippocampus volume "
 asegstats2table --subjects ${subjects} --tablefile ${outputdir}/vol+QA/${sample}_asegstats.txt
 
-echo "extracting WM and CSF overlap with Iglesias thalamus segmentation "
+echo "extracting WM and CSF overlap with Iglesias amygdala and hippocampus segmentation "
 
 rm -f ${outputdir}/vol+QA/${sample}_WM_overlap.txt
 rm -f ${outputdir}/vol+QA/${sample}_CSF_overlap.txt
@@ -470,7 +470,7 @@ cat ${subj}/QC/${subj}_WM_overlap.txt >> ${outputdir}/vol+QA/${sample}_WM_overla
 done
 
 # make webpage of thalamus subsegmentations
-echo "creating webpage of thalamic subsegmentations for visual QC"
+echo "creating webpage of amygdalar / hippocampal subsegmentations for visual QC"
 /neurodocker/create_webpage_thalsubs.sh ${outputdir}
 # copy reference segmentations to vol+qa
 cp /neurodocker/REFERENCE_1subj_thalQC.html /neurodocker/REFERENCE_avg_thalQC.html ${outputdir}/vol+QA/
