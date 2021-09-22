@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # (C) C.Vriend - 1/1/2020
 # code written as part of ENIGMA OCD for subsegmentation of the thalamus
 # script to run FreeSurfer on T1 and subsequently perform thalamic subsegmentation
@@ -52,8 +53,7 @@ ext=nii.gz
 #mode=full
 NCORES=1
 NSUBJ=1
-# different versions of Thalamic subnuclei exists: v10 and v12.
-vers=v12
+vers=v21
 
 while [ _$1 != _ ] ; do
 	case "$1" in
@@ -196,12 +196,14 @@ for subj in ${subjects}; do
 
 # check existence of files in output folder
 if [ -d ${outputdir}/${subj} ] \
-&& [ -f ${outputdir}/${subj}/stats/thalamic-nuclei.lh.${vers}.T1.stats ] \
-&& [ -f ${outputdir}/${subj}/stats/thalamic-nuclei.rh.${vers}.T1.stats ] \
+&& [ -f ${outputdir}/${subj}/stats/hipposubfields.lh.T1.${vers}.stats ] \
+&& [ -f ${outputdir}/${subj}/stats/hipposubfields.rh.T1.${vers}.stats ] \
+&& [ -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ] \
+&& [ -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ] \
 && [ -f ${outputdir}/${subj}/scripts/recon-all.done ] \
 && [ -f ${outputdir}/${subj}/mri/wmparc.mgz ] \
-&& [ -f ${outputdir}/${subj}/mri/thalwm.nii.gz ] \
-&& [ -f ${outputdir}/${subj}/mri/thalcsf.nii.gz ] \
+&& [ -f ${outputdir}/${subj}/mri/hipamygwm.nii.gz ] \
+&& [ -f ${outputdir}/${subj}/mri/hipamygcsf.nii.gz ] \
 && [ $(cat ${outputdir}/${subj}/QC/${subj}_CSF_overlap.txt | wc -l) -ge 1 ] \
 && [ $(cat ${outputdir}/${subj}/QC/${subj}_WM_overlap.txt | wc -l) -ge 1 ]; then
 
@@ -312,8 +314,10 @@ if [ ! -f ${outputdir}/${subj}/mri/wmparc.mgz ] \
       fi
 
 
-elif [ ! -f ${outputdir}/${subj}/stats/thalamic-nuclei.lh.${vers}.T1.stats ] \
-|| [ ! -f ${outputdir}/${subj}/stats/thalamic-nuclei.rh.${vers}.T1.stats ]; then
+elif [ -f ${outputdir}/${subj}/stats/hipposubfields.lh.T1.${vers}.stats ] \
+|| [ -f ${outputdir}/${subj}/stats/hipposubfields.rh.T1.${vers}.stats ] \
+|| [ -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ] \
+|| [ -f ${outputdir}/${subj}/stats/amygdalar-nuclei.lh.T1.${vers}.stats ]; then
 echo "recon-all already completed"
 echo "continue to hippocampal / amygdala subsegmentation"
 
@@ -325,8 +329,8 @@ echo "continue to hippocampal / amygdala subsegmentation"
 			sleep $[ $RANDOM % 90 ]
 		fi
 
-elif [ ! -f ${outputdir}/${subj}/mri/thalwm.nii.gz ] \
-|| [ ! -f ${outputdir}/${subj}/mri/thalcsf.nii.gz ] \
+elif [ ! -f ${outputdir}/${subj}/mri/hipamygwm.nii.gz ] \
+|| [ ! -f ${outputdir}/${subj}/mri/hipamygcsf.nii.gz ] \
 || [ $(cat ${outputdir}/${subj}/QC/${subj}_CSF_overlap.txt | wc -l) -lt 1 ] \
 || [ $(cat ${outputdir}/${subj}/QC/${subj}_WM_overlap.txt | wc -l) -lt 1 ]; then
 
@@ -435,9 +439,9 @@ if [ ! -f ${subj}/mri/brain.mgz ]; then
   sleep 1
   exit
 fi
-
-if [ ! -f ${subj}/mri/ThalamicNuclei.${vers}.T1.mgz ]; then
- echo "ThalamicNuclei.${vers}.T1.mgz does not exist for ${subj} in the FreeSurfer mri folder"
+if [ ! -f ${subj}/mri/rh.hippoAmygLabels-T1.${vers}.mgz ] \
+|| [ ! -f ${subj}/mri/lh.hippoAmygLabels-T1.${vers}.mgz ]; then
+ echo "*hippoAmygLabels-T1.${vers}.mgz does not exist for ${subj} in the FreeSurfer mri folder"
  echo "this file is necessary for quality inspection"
  echo " "
  echo "rerun the script for this subject or remove the folder from the output directory ="
@@ -471,7 +475,7 @@ echo "creating webpage of thalamic subsegmentations for visual QC"
 # copy reference segmentations to vol+qa
 cp /neurodocker/REFERENCE_1subj_thalQC.html /neurodocker/REFERENCE_avg_thalQC.html ${outputdir}/vol+QA/
 
-echo "extracting and plotting volume of thalamic subnuclei"
+echo "extracting and plotting volume of hippocampal and amygdalar subnuclei"
 sleep 2
 # run python script to extract volumes and make plots for QA
 /neurodocker/extract_vols_plot.py --workdir ${outputdir} --outdir ${outputdir}/vol+QA --outbase ${sample} --plotbase plot_${sample} --thalv ${vers}

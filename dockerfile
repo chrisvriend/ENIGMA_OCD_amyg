@@ -10,6 +10,8 @@
 
 FROM debian:stretch
 
+LABEL maintainer=c.vriend@amsterdamumc.nl
+
 USER root
 
 ARG DEBIAN_FRONTEND="noninteractive"
@@ -49,14 +51,12 @@ RUN export ND_ENTRYPOINT="/mainscript.sh" \
 
 COPY [ "license.txt",  "/opt/freesurfer7/"]
 COPY [ "quantifyThalamicNuclei.sh",  "/opt/freesurfer7/bin/"]
-COPY [ "mainscript_v9.sh", "/mainscript.sh"]
+COPY [ "mainscript.sh", "/mainscript.sh"]
 COPY [ "combine_subnuclei_v3.sh" , "/neurodocker/combine_subnuclei.sh"]
 COPY [ "extract_vols_plot.py" , "/neurodocker/extract_vols_plot.py"]
 COPY [ "create_webpage_thalsubs.sh", "/neurodocker/create_webpage_thalsubs.sh"]
 COPY [ "QA_thalseg_v2.sh", "/neurodocker/QA_thalseg.sh"]
 COPY [ "thalseg2html.py", "/neurodocker/thalseg2html.py"]
-COPY [ "REFERENCE_1subj_thalQC.html", "/neurodocker/"]
-COPY [ "REFERENCE_avg_thalQC.html", "/neurodocker/"]
 
 RUN ["chmod", "+x", "/mainscript.sh"]
 RUN ["chmod", "+x", "/neurodocker/combine_subnuclei.sh"]
@@ -89,11 +89,9 @@ RUN apt-get update -qq \
       --exclude='freesurfer/average/BrainstemSS' \
       --exclude='freesurfer/average/Buckner_JNeurophysiol11_MNI152' \
       --exclude='freesurfer/average/Choi_JNeurophysiol12_MNI152' \
-      --exclude='freesurfer/average/HippoSF' \
       --exclude='freesurfer/average/Yeo_Brainmap_MNI152' \
       --exclude='freesurfer/average/Yeo_JNeurophysiol11_MNI152' \
       --exclude='freesurfer/lib/cuda' \
-      --exclude='freesurfer/lib/qt' \
       --exclude='freesurfer/subjects/V1_average' \
       --exclude='freesurfer/subjects/bert' \
       --exclude='freesurfer/subjects/cvs_avg35' \
@@ -106,14 +104,18 @@ RUN apt-get update -qq \
       --exclude='freesurfer/trctrain' \
       && sed -i 's/set scrlist = (segmentHA_T1.sh segmentThalamicNuclei.sh segmentBS.sh)/set scrlist =  (segmentHA_T1.sh)/g' /opt/freesurfer7/bin/recon-all
 
-RUN export TMPDIR="$(mktemp -d)" \
-      && echo "Downloading MATLAB Compiler Runtime ..." \
-      && curl -fsSL --retry 5 -o "$TMPDIR/mcr.zip" https://ssd.mathworks.com/supportfiles/downloads/R2014b/deployment_files/R2014b/installers/glnxa64/MCR_R2014b_glnxa64_installer.zip \
-      && unzip -q "$TMPDIR/mcr.zip" -d "$TMPDIR/mcrtmp" \
-      && "$TMPDIR/mcrtmp/install" -destinationFolder /opt/freesurfer7/MCRv84 -mode silent -agreeToLicense yes \
-      && mv -n /opt/freesurfer7/MCRv84/v84/* /opt/freesurfer7/MCRv84/ \
-      && rm -rf "$TMPDIR" \
-      && unset TMPDIR
+
+RUN fs_install_mcr R2014b
+
+
+#RUN export TMPDIR="$(mktemp -d)" \
+#      && echo "Downloading MATLAB Compiler Runtime ..." \
+#      && curl -fsSL --retry 5 -o "$TMPDIR/mcr.zip" https://ssd.mathworks.com/supportfiles/downloads/R2014b/deployment_files/R2014b/installers/glnxa64/MCR_R2014b_glnxa64_installer.zip \
+#      && unzip -q "$TMPDIR/mcr.zip" -d "$TMPDIR/mcrtmp" \
+#      && "$TMPDIR/mcrtmp/install" -destinationFolder /opt/freesurfer7/MCRv84 -mode silent -agreeToLicense yes \
+#      && mv -n /opt/freesurfer7/MCRv84/v84/* /opt/freesurfer7/MCRv84/ \
+#      && rm -rf "$TMPDIR" \
+#      && unset TMPDIR
 
 
 
@@ -194,6 +196,8 @@ RUN apt-get update -qq \
 
 ENV PYTHONPATH="/opt/miniconda-latest/envs/neuro/lib/python3.7/site-packages:$PYTHONPATH" \
     PATH="/opt/miniconda-latest/envs/neuro/lib/python3.7/site-packages:$PATH"
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/lib
 
 
 RUN export FREESURFER_HOME="/opt/freesurfer7" \
