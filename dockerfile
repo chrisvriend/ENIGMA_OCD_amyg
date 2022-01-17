@@ -51,6 +51,7 @@ RUN export ND_ENTRYPOINT="/mainscript.sh" \
 
 
 COPY [ "license.txt",  "/opt/freesurfer7/"]
+COPY [ "quantifyThalamicNuclei.sh",  "/opt/freesurfer7/bin/"]
 COPY [ "mainscript.sh", "/mainscript.sh"]
 COPY [ "combine_subnuclei_v3.sh" , "/neurodocker/combine_subnuclei.sh"]
 COPY [ "extract_vols_plot_amygdala.py" , "/neurodocker/extract_vols_plot_amygdala.py"]
