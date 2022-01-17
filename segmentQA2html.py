@@ -15,10 +15,10 @@ import os
 
 
 
-parser = argparse.ArgumentParser('create html for thalamic subsegmentation QC')
+parser = argparse.ArgumentParser('create html for amygdala or hippocampus subsegmentation QC')
 
 # required arguments
-parser.add_argument('--thal', action="store", dest="thal", required=True,
+parser.add_argument('--seg', action="store", dest="seg", required=True,
                     help='full path to thalamic segmentation')
 parser.add_argument('--brain', action="store", dest="brain", required=True,
                     help='full path to MRI brain as background image')
@@ -26,7 +26,7 @@ parser.add_argument('--output', action="store", dest="output", required=True,
                     help='full path to output html file')
 # parse arguments
 args = parser.parse_args()
-thal=args.thal
+seg=args.thal
 brain=args.brain
 output=args.output
 
@@ -38,7 +38,7 @@ output=args.output
 
 
 # overlay thalamic segmentation on T1 brainThalamicNuclei.v12.T1.FSvoxelSpace_noLMGN.nii
-view=plotting.view_img(thal,
+view=plotting.view_img(seg,
                        bg_img=brain,symmetric_cmap=False,
                        resampling_interpolation='nearest',
                        colorbar=False,opacity=0.6,annotate=True,

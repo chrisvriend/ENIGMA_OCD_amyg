@@ -329,10 +329,14 @@ echo "continue to hippocampal / amygdala subsegmentation"
 			sleep $[ $RANDOM % 90 ]
 		fi
 
-elif [ ! -f ${outputdir}/${subj}/mri/hipamygwm.nii.gz ] \
-|| [ ! -f ${outputdir}/${subj}/mri/hipamygcsf.nii.gz ] \
-|| [ $(cat ${outputdir}/${subj}/QC/${subj}_CSF_overlap.txt | wc -l) -lt 1 ] \
-|| [ $(cat ${outputdir}/${subj}/QC/${subj}_WM_overlap.txt | wc -l) -lt 1 ]; then
+elif [ ! -f ${outputdir}/${subj}/mri/wm_hippocampus.nii.gz ] \
+|| [ ! -f ${outputdir}/${subj}/mri/csf_hippocampus.nii.gz ] \
+|| [ ! -f ${outputdir}/${subj}/mri/wm_amygdala.nii.gz ] \
+|| [ ! -f ${outputdir}/${subj}/mri/csf_amygdala.nii.gz ] \
+|| [ $(cat ${outputdir}/${subj}/QC/${subj}_CSF_overlap_amygdala.txt | wc -l) -lt 1 ] \
+|| [ $(cat ${outputdir}/${subj}/QC/${subj}_CSF_overlap_hippocampus.txt | wc -l) -lt 1 ] \
+|| [ $(cat ${outputdir}/${subj}/QC/${subj}_WM_overlap_hippocampus.txt | wc -l) -lt 1 ] \
+|| [ $(cat ${outputdir}/${subj}/QC/${subj}_WM_overlap_amygdala.txt | wc -l) -lt 1 ]; then
 
 		echo "recon-all already completed"
 		echo " amygdalar and hippocampal subsegmentation already completed"
@@ -396,12 +400,12 @@ echo "${outputdir}"
 echo " "
 echo "exiting the program"
 sleep 1
-exit
+#exit
 
 fi
 
-if [ ! -f ${subj}/QC/${subj}_CSF_overlap.txt ]; then
-  echo "CSF_overlap.txt does not exist for ${subj} in the QC folder"
+if [ ! -f ${subj}/QC/${subj}_CSF_overlap_amygdala.txt ]; then
+  echo "CSF_overlap_amygdala.txt does not exist for ${subj} in the QC folder"
   echo "this file is necessary for quality inspection"
   echo " "
   echo "rerun the script for this subject or remove the folder from the output directory ="
@@ -409,12 +413,12 @@ if [ ! -f ${subj}/QC/${subj}_CSF_overlap.txt ]; then
   echo " "
   echo "exiting the program"
   sleep 1
-  exit
+#  exit
 
 fi
 
-if [ ! -f ${subj}/QC/${subj}_CSF_overlap.txt ]; then
-  echo "WM_overlap.txt does not exist for ${subj} in the QC folder"
+if [ ! -f ${subj}/QC/${subj}_WM_overlap_amygdala.txt ]; then
+  echo "WM_overlap_amygdala.txt does not exist for ${subj} in the QC folder"
   echo "this file is necessary for quality inspection"
   echo " "
   echo "rerun the script for this subject or remove the folder from the output directory ="
@@ -422,10 +426,40 @@ if [ ! -f ${subj}/QC/${subj}_CSF_overlap.txt ]; then
   echo " "
   echo "exiting the program"
   sleep 1
-  exit
+  #exit
 
 
 fi
+
+
+if [ ! -f ${subj}/QC/${subj}_CSF_overlap_hippocampus.txt ]; then
+  echo "CSF_overlap_hippocampus.txt does not exist for ${subj} in the QC folder"
+  echo "this file is necessary for quality inspection"
+  echo " "
+  echo "rerun the script for this subject or remove the folder from the output directory ="
+  echo "${outputdir}"
+  echo " "
+  echo "exiting the program"
+  sleep 1
+#  exit
+
+fi
+
+if [ ! -f ${subj}/QC/${subj}_WM_overlap_hippocampus.txt ]; then
+  echo "WM_overlap_hippocampus.txt does not exist for ${subj} in the QC folder"
+  echo "this file is necessary for quality inspection"
+  echo " "
+  echo "rerun the script for this subject or remove the folder from the output directory ="
+  echo "${outputdir}"
+  echo " "
+  echo "exiting the program"
+  sleep 1
+#  exit
+
+
+fi
+
+
 
 # create list of brain mgz / ThalamicNuclei.v12.T1.mgz for concatenation
 if [ ! -f ${subj}/mri/brain.mgz ]; then
@@ -437,7 +471,7 @@ if [ ! -f ${subj}/mri/brain.mgz ]; then
   echo " "
   echo "exiting the program"
   sleep 1
-  exit
+#  exit
 fi
 if [ ! -f ${subj}/mri/rh.hippoAmygLabels-T1.${vers}.mgz ] \
 || [ ! -f ${subj}/mri/lh.hippoAmygLabels-T1.${vers}.mgz ]; then
@@ -449,7 +483,7 @@ if [ ! -f ${subj}/mri/rh.hippoAmygLabels-T1.${vers}.mgz ] \
  echo " "
  echo "exiting the program"
  sleep 1
- exit
+# exit
 fi
 
 done
@@ -459,26 +493,33 @@ asegstats2table --subjects ${subjects} --tablefile ${outputdir}/vol+QA/${sample}
 
 echo "extracting WM and CSF overlap with Iglesias amygdala and hippocampus segmentation "
 
-rm -f ${outputdir}/vol+QA/${sample}_WM_overlap.txt
-rm -f ${outputdir}/vol+QA/${sample}_CSF_overlap.txt
+rm -f ${outputdir}/vol+QA/${sample}_WM_overlap*.txt
+rm -f ${outputdir}/vol+QA/${sample}_CSF_overlap*.txt
 
 for subj in ${subjects}; do
 
-cat ${subj}/QC/${subj}_CSF_overlap.txt >> ${outputdir}/vol+QA/${sample}_CSF_overlap.txt
-cat ${subj}/QC/${subj}_WM_overlap.txt >> ${outputdir}/vol+QA/${sample}_WM_overlap.txt
+cat ${subj}/QC/${subj}_CSF_overlap_amygdala.txt >> ${outputdir}/vol+QA/${sample}_CSF_overlap_amygdala.txt
+cat ${subj}/QC/${subj}_WM_overlap_amygdala.txt >> ${outputdir}/vol+QA/${sample}_WM_overlap_amygdala.txt
+
+cat ${subj}/QC/${subj}_CSF_overlap_hippocampus.txt >> ${outputdir}/vol+QA/${sample}_CSF_overlap_hippocampus.txt
+cat ${subj}/QC/${subj}_WM_overlap_hippocampus.txt >> ${outputdir}/vol+QA/${sample}_WM_overlap_hippocampus.txt
 
 done
 
 # make webpage of thalamus subsegmentations
 echo "creating webpage of amygdalar / hippocampal subsegmentations for visual QC"
-/neurodocker/create_webpage_thalsubs.sh ${outputdir}
+/neurodocker/create_webpages.sh ${outputdir}
+
+
 # copy reference segmentations to vol+qa
-cp /neurodocker/REFERENCE_1subj_thalQC.html /neurodocker/REFERENCE_avg_thalQC.html ${outputdir}/vol+QA/
+
+#cp /neurodocker/REFERENCE_1subj_thalQC.html /neurodocker/REFERENCE_avg_thalQC.html ${outputdir}/vol+QA/
 
 echo "extracting and plotting volume of hippocampal and amygdalar subnuclei"
 sleep 2
 # run python script to extract volumes and make plots for QA
-/neurodocker/extract_vols_plot.py --workdir ${outputdir} --outdir ${outputdir}/vol+QA --outbase ${sample} --plotbase plot_${sample} --thalv ${vers}
+/neurodocker/extract_vols_plot_hippocampus.py --workdir ${outputdir} --outdir ${outputdir}/vol+QA --outbase ${sample} --plotbase plot_${sample} --segv ${vers}
+/neurodocker/extract_vols_plot_amygdala.py --workdir ${outputdir} --outdir ${outputdir}/vol+QA --outbase ${sample} --plotbase plot_${sample} --segv ${vers}
 
 else
 

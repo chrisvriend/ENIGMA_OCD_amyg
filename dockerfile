@@ -51,11 +51,12 @@ RUN export ND_ENTRYPOINT="/mainscript.sh" \
 
 
 COPY [ "license.txt",  "/opt/freesurfer7/"]
-COPY [ "quantifyThalamicNuclei.sh",  "/opt/freesurfer7/bin/"]
 COPY [ "mainscript.sh", "/mainscript.sh"]
 COPY [ "combine_subnuclei_v3.sh" , "/neurodocker/combine_subnuclei.sh"]
-COPY [ "extract_vols_plot.py" , "/neurodocker/extract_vols_plot.py"]
-COPY [ "create_webpage_thalsubs.sh", "/neurodocker/create_webpage_thalsubs.sh"]
+COPY [ "extract_vols_plot_amygdala.py" , "/neurodocker/extract_vols_plot_amygdala.py"]
+COPY [ "extract_vols_plot_hippocampus.py" , "/neurodocker/extract_vols_plot_hippocampus.py"]
+
+COPY [ "create_webpages.sh", "/neurodocker/create_webpages.sh"]
 COPY [ "QA_thalseg_v2.sh", "/neurodocker/QA_thalseg.sh"]
 COPY [ "thalseg2html.py", "/neurodocker/thalseg2html.py"]
 
@@ -64,7 +65,8 @@ RUN ["chmod", "+x", "/neurodocker/combine_subnuclei.sh"]
 RUN ["chmod", "+x", "/neurodocker/create_webpage_thalsubs.sh"]
 RUN ["chmod", "+x", "/neurodocker/QA_thalseg.sh"]
 RUN ["chmod", "+x", "/neurodocker/thalseg2html.py"]
-RUN ["chmod", "+x", "/neurodocker/extract_vols_plot.py"]
+RUN ["chmod", "+x", "/neurodocker/extract_vols_plot_hippocampus.py"]
+RUN ["chmod", "+x", "/neurodocker/extract_vols_plot_amygdala.py"]
 
 
 ENTRYPOINT ["/mainscript.sh"]

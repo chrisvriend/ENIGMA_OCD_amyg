@@ -36,7 +36,7 @@ parser.add_argument('--outbase', action="store", dest="outbase", required=True,
                                         help='base of output csv files')
 parser.add_argument('--plotbase', action="store", dest="plotbase", required=True,
                                         help='base of output plot files ')
-parser.add_argument('--thalv', action="store", dest="thalv", required=True,
+parser.add_argument('--segv', action="store", dest="segv", required=True,
                     help='version number of thalamic subsegmentation ')
 
 args = parser.parse_args()
@@ -54,19 +54,18 @@ outbase=args.outbase
 # name base for vol QA html pages
 plotbase=args.plotbase
 
-# segmentation of thal subsegmentation was recently changed to V12
-thalversion=args.thalv
-
-
-
+# segmentation of amygdala hippocampus subsegmentation = v21
+hippversion=args.segv
 
 # specify index of subnuclei in dictionary
-thalsubnuclei={}
-thalsubnuclei['AnterioVentral']=[1]
-thalsubnuclei['medial']=[2,3,4,9,10,12,13,15]
-thalsubnuclei['lateral']=[5,7]
-thalsubnuclei['pulvinar']=[16,17,18,19]
-thalsubnuclei['ventral']=[20,21,22,23,24,25]
+# Amygdala nuclei indexes are based on the text file in subject/stats/amygdalar-nuclei.${hemisphere}.T1.v21.stats
+hippsubnuclei={}
+hippsubnuclei['head']=[21]
+hippsubnuclei['body']=[20]
+hippsubnuclei['tail']=[1]
+hippsubnuclei['whole_hippocampus']=[22]
+
+
 
 
 
@@ -81,7 +80,7 @@ subjdirs=[subjdirs for subjdirs in os.listdir(workdir)
 subjdirs.sort()
 
 # define variables in which individual subject data are stored
-# save variables in dataframe and export as thalamic-nuclei.v10.T1.stats
+# save variables in dataframe and export as amygdala-nuclei.v21.T1.stats
 
 for subj in subjdirs:
     print(subj)
@@ -89,43 +88,42 @@ for subj in subjdirs:
     os.chdir(os.path.join(workdir,subj,'stats'))
     # make empty dataframes before hemi loop
 
-    df_thalbilat=pd.DataFrame()
+    df_hippbilat=pd.DataFrame()
     df_subnbilat=pd.DataFrame()
-    df_thalgroup=pd.DataFrame()
+    df_hippgroup=pd.DataFrame()
 
     for hemi in ['lh','rh']:
 
         labelvol='volume_' + hemi
         labelnucl='nucleus_' + hemi
 
-        df_thal=pd.read_csv('thalamic-nuclei.' + hemi + '.' + thalversion + '.T1.stats',delim_whitespace=True,skiprows=1,
+        df_hipp=pd.read_csv('hipposubfields.' + hemi + '.T1' + '.' + hippversion + '.stats',delim_whitespace=True,skiprows=1,
                             names=['ID','ID2','zero',labelvol,labelnucl],index_col='ID')
         # delete unneccesary columns
-        df_thal=df_thal.drop(columns=(['ID2','zero']))
+        df_hipp=df_hipp.drop(columns=(['ID2','zero']))
 
         # add hemi to nucleus label
-        df_thal[labelnucl]= df_thal[labelnucl] + "_" + hemi
+        df_hipp[labelnucl]= df_hipp[labelnucl] + "_" + hemi
 
         df_subn=pd.DataFrame()
 
         # merge subnuclei to larger areas
         totalvol = np.array([])
-        for subn,idx in thalsubnuclei.items():
+        for subn,idx in hippsubnuclei.items():
 
             # print(subn + " " + hemi)
 
             # slice rows that belong to a particular nuclei group
             # and append to dataframe
-            df_subn=df_subn.append(df_thal.loc[idx,:])
+            df_subn=df_subn.append(df_hipp.loc[idx,:])
 
             # calculate volume of nuclei group
             # and append to dataframe
-            df_thalgroup=df_thalgroup.append({'nucleigroup' : subn + "_" + hemi,
-                                              'volume': df_thal.loc[idx,labelvol].sum()},ignore_index=True)
-            totalvol=np.append(totalvol,df_thal.loc[idx,labelvol].sum())
-        df_thalgroup=df_thalgroup.append({'nucleigroup' : 'whole_thalamus' + "_" + hemi,
-                                              'volume': np.sum(totalvol)},ignore_index=True)
-    # which one to use??
+            df_hippgroup=df_hippgroup.append({'nucleigroup' : subn + "_" + hemi,
+                                              'volume': df_hipp.loc[idx,labelvol].sum()},ignore_index=True)
+      #      totalvol=np.append(totalvol,df_hipp.loc[idx,labelvol].sum())
+      #  df_hippgroup=df_hippgroup.append({'nucleigroup' : 'whole_hippdala' + "_" + hemi,
+       #                                       'volume': np.sum(totalvol)},ignore_index=True)
 
     ### = subset of subnuclei also used for nucleus groups
         # rename columns
@@ -135,28 +133,28 @@ for subj in subjdirs:
 
     ### = all  subnuclei
         # rename columns
-        df_thal=df_thal.rename(columns={labelnucl : 'nucleus', labelvol : 'volume'})
+        df_hipp=df_hipp.rename(columns={labelnucl : 'nucleus', labelvol : 'volume'})
         # append hemispheres
-        df_thalbilat=df_thalbilat.append(df_thal)
+        df_hippbilat=df_hippbilat.append(df_hipp)
 
     # set index
     df_subnbilat=df_subnbilat.set_index('nucleus')
-    df_thalbilat=df_thalbilat.set_index('nucleus')
-    df_thalgroup=df_thalgroup.set_index('nucleigroup')
+    df_hippbilat=df_hippbilat.set_index('nucleus')
+    df_hippgroup=df_hippgroup.set_index('nucleigroup')
 
     # round volumes to 3 decimals and sort
     df_subnbilat=df_subnbilat.round(3).sort_values(by=['nucleus'])
-    df_thalbilat=df_thalbilat.round(3).sort_values(by=['nucleus'])
-    df_thalgroup=df_thalgroup.round(3).sort_values(by=['nucleigroup'])
+    df_hippbilat=df_hippbilat.round(3).sort_values(by=['nucleus'])
+    df_hippgroup=df_hippgroup.round(3).sort_values(by=['nucleigroup'])
 
     # save to csv file (for individual subjects)
 
     # define personal base directory!
 
-    df_thalbilat.to_csv(os.path.join(subj + '_volume_subnuclei_all' + '.csv'), na_rep='NULL')
-    df_subnbilat.to_csv(os.path.join(subj + '_volume_subnuclei' + '.csv')
+    df_hippbilat.to_csv(os.path.join(subj + '_hipp_volume_subnuclei_all' + '.csv'), na_rep='NULL')
+    df_subnbilat.to_csv(os.path.join(subj + '_hipp_volume_subnuclei' + '.csv')
                             ,na_rep='NULL')
-    df_thalgroup.to_csv(os.path.join(subj + '_volume_nucleigroups' + '.csv')
+    df_hippgroup.to_csv(os.path.join(subj + '_hipp_volume_subfields' + '.csv')
                             ,na_rep='NULL')
 
 ################################################################################################
@@ -166,8 +164,8 @@ os.chdir(outputdir)
 
 # read txt files with WM and CSF overlap with Thalamus segmentations of entire sample
 
-WMalltxtfile=outbase + "_WM_overlap.txt"
-CSFalltxtfile=outbase + "_CSF_overlap.txt"
+WMalltxtfile=outbase + "_WM_overlap_hippocampus.txt"
+CSFalltxtfile=outbase + "_CSF_overlap_hippocampus.txt"
 
 # this one needs to be created using FS aseg2statstable
 # set SUBJECTS_DIR
@@ -185,7 +183,7 @@ df_CSF = pd.read_csv(CSFalltxtfile, delim_whitespace=True,
 #make variable for column names for aseg.stats data that need to be extracted
 volmeasures=['Measure:volume','BrainSegVol', 'BrainSegVolNotVent',
              'CortexVol','TotalGrayVol','EstimatedTotalIntraCranialVol',
-             'Left-Thalamus','Right-Thalamus']
+             'Left-Hippocampus','Right-Hippocampus']
 
 #import the aseg.stats data for the old (FS) thalamus segmentation (stored in SUBJECTS_DIR)
 asegstat_allppn=pd.read_csv(os.path.join(outputdir,asegallstatsfile),
@@ -202,7 +200,7 @@ for subj in subjdirs:
 
     #import the data for the volumes of the nucleigroups, index is nucleigroup
     # transpose the dataframe and append to df_master
-    df_master = df_master.append(pd.read_csv(subj + '_volume_nucleigroups.csv', delimiter = ',',
+    df_master = df_master.append(pd.read_csv(subj + '_hipp_volume_subfields.csv', delimiter = ',',
                          index_col = 'nucleigroup').T, ignore_index=True)
 
 
@@ -218,25 +216,25 @@ df_master = df_master.merge(df_WM, left_index=True, right_index=True)
 df_master = df_master.merge(df_CSF, left_index=True, right_index=True)
 
 #select columns of interest from asegstat file (left old, Right old and intracranial volume)
-df_LT_RT_ICV = pd.DataFrame(asegstat_allppn.loc[:,["Left-Thalamus","Right-Thalamus",
+df_LT_RT_ICV = pd.DataFrame(asegstat_allppn.loc[:,["Left-Hippocampus","Right-Hippocampus",
                                                    "EstimatedTotalIntraCranialVol"]])
 
 #set index title to subject ID and rename Old thalamus column names
 df_LT_RT_ICV.index.name = "subject_ID"
-df_LT_RT_ICV.columns=["Old_Left-Thal", "Old_Right-Thal", "ICV"]
+df_LT_RT_ICV.columns=["Old_Left-Hipp", "Old_Right-Hipp", "ICV"]
 
 #Add old thalamus (Left, Right, ICV) data to master dataframe
 df_master = df_master.merge(df_LT_RT_ICV, left_index=True, right_index=True)
 
 #Calculate difference Old thalami (FS) and New thalami (Iglesias) and add as column
-df_master["diff_Right-Thal"]=df_master["Old_Right-Thal"]-df_master["whole_thalamus_rh"]
-df_master["diff_Left-Thal"]=df_master["Old_Left-Thal"]-df_master["whole_thalamus_lh"]
+df_master["diff_Right-Hipp"]=df_master["Old_Right-Hipp"]-df_master["whole_hippocampus_rh"]
+df_master["diff_Left-Hipp"]=df_master["Old_Left-Hipp"]-df_master["whole_hippocampus_lh"]
 
 # round volume to 3 decimals
 df_master=df_master.round(3)
 
 #Save master dataframe to csv
-df_master.to_csv(os.path.join(outputdir,(outbase + '_vols.csv')), na_rep='NULL')
+df_master.to_csv(os.path.join(outputdir,(outbase + '_hippocampus_vols.csv')), na_rep='NULL')
 
 # for debugging
 # load df_master
@@ -279,13 +277,13 @@ df_master_outliers=df_master_outliers.filter(regex='-out')
 print('number of detected outliers:')
 print(df_master_outliers.sum())
 
-df_master_outliers.to_csv(os.path.join(outputdir,(outbase + '_outliers.csv')), na_rep='NULL')
+df_master_outliers.to_csv(os.path.join(outputdir,(outbase + '_hipp_outliers.csv')), na_rep='NULL')
 
 
 #######################
 # OUTLIERS 2 TXT file #
 #######################
-print('saving subject IDs to outliers.txt in output directory')
+print('saving subject IDs to hippocampus outliers.txt in output directory')
 
 
 def getIndexes(dfObj, value):
@@ -306,7 +304,7 @@ def getIndexes(dfObj, value):
 
 idxoutliers=np.unique(getIndexes(df_master_outliers,1))
 outliersdf=pd.DataFrame(idxoutliers,index=None)
-outliersdf.to_csv(os.path.join(workdir,'outliers.txt'),header=False,index=False, sep=' ')
+outliersdf.to_csv(os.path.join(workdir,'hipp_outliers.txt'),header=False,index=False, sep=' ')
 
 
 #####################
@@ -319,124 +317,135 @@ filter_rh = [col for col in df_master if col.endswith('_rh')]
 # divide all values by ICV and multiply by 1000000
 df_master2=df_master.loc[:,filter_lh + filter_rh].divide(df_master['ICV'], axis = 'rows').multiply(1000000)
 
+
+
 #####################
 #  PREPARE 4 RAIN   #
 #####################
 
-df_left=df_master.filter(regex='_lh')
-df_right=df_master.filter(regex='_rh')
+# take ICV corrected dataframe
+df_sub = pd.DataFrame()
 
-
-# for loops below are using ICV corrected values
-
-df_sub_lh = pd.DataFrame()
-df_sub_rh = pd.DataFrame()
-
-for c in filter_lh:
-
+for c in df_master2.columns:
     if 'whole' not in c:
         temp=pd.DataFrame(columns = ['volume', 'nucleigroup'])
         temp=df_master2[[c]].rename(columns={c : 'volume'})
         temp['nucleigroup']=pd.Series(c, index=df_master2.index)
 
-        df_sub_lh=df_sub_lh.append(temp)
+        df_sub=df_sub.append(temp)
 
         del temp
 
-for c in filter_rh:
+### old code ###
 
-      if 'whole' not in c:
-        temp=pd.DataFrame(columns = ['volume', 'nucleigroup'])
-        temp=df_master2[[c]].rename(columns={c : 'volume'})
-        temp['nucleigroup']=pd.Series(c, index=df_master2.index)
-        df_sub_rh=df_sub_rh.append(temp)
+# df_left=df_master.filter(regex='_lh')
+# df_right=df_master.filter(regex='_rh')
 
 
-# split into Medial, Pulvinar and Ventral / Anterioventral, lateral
+# # for loops below are using ICV corrected values
 
-df_sub_lh['temp'] = df_sub_lh['nucleigroup'].apply(lambda x: 'True'
-                                                   if x == 'AnterioVentral_lh' or
-                                                   x == 'lateral_lh' else 'False')
+# df_sub_lh = pd.DataFrame()
+# df_sub_rh = pd.DataFrame()
 
-df_MPV_lh, df_AvL_lh = [x for _, x in df_sub_lh.groupby(df_sub_lh['temp'] == 'True')]
-# drop temp column from dataframe
-df_sub_lh.drop('temp',axis=1,inplace=True)
-df_MPV_lh.drop('temp',axis=1,inplace=True)
-df_AvL_lh.drop('temp',axis=1,inplace=True)
+# for c in filter_lh:
+
+#     if 'whole' not in c:
+#         temp=pd.DataFrame(columns = ['volume', 'nucleigroup'])
+#         temp=df_master2[[c]].rename(columns={c : 'volume'})
+#         temp['nucleigroup']=pd.Series(c, index=df_master2.index)
+
+#         df_sub_lh=df_sub_lh.append(temp)
+
+#         del temp
+
+# for c in filter_rh:
+
+#       if 'whole' not in c:
+#         temp=pd.DataFrame(columns = ['volume', 'nucleigroup'])
+#         temp=df_master2[[c]].rename(columns={c : 'volume'})
+#         temp['nucleigroup']=pd.Series(c, index=df_master2.index)
+#         df_sub_rh=df_sub_rh.append(temp)
 
 
-df_sub_rh['temp'] = df_sub_rh['nucleigroup'].apply(lambda x: 'True'
-                                                   if x == 'AnterioVentral_rh' or
-                                                   x == 'lateral_rh' else 'False')
+# # split into basolateral, centromedial and cortical-like
 
-df_MPV_rh, df_AvL_rh = [x for _, x in df_sub_rh.groupby(df_sub_rh['temp'] == 'True')]
-# drop temp column from dataframe
-df_sub_rh.drop('temp',axis=1,inplace=True)
-df_MPV_rh.drop('temp',axis=1,inplace=True)
-df_AvL_rh.drop('temp',axis=1,inplace=True)
+# df1_lh, df2_lh, df3_lh = [x for _, x in df_sub_lh.groupby(df_sub_lh['nucleigroup'])]
+# df1_rh, df2_rh, df3_rh = [x for _, x in df_sub_rh.groupby(df_sub_rh['nucleigroup'])]
 
+# # merge left and right
 
+# df1=df1_lh.append(df1_rh).round(2)
+# df2=df2_lh.append(df2_rh).round(2)
+# df3=df3_lh.append(df3_rh).round(2)
+
+# dflists=[df1, df2, df3]
 
 #########################
 #  INTERACTIVE PLOTS    #
 #########################
 
-# merge left and right
+# old code
 
-df_MPV=df_MPV_lh.append(df_MPV_rh).round(2)
-df_AvL=df_AvL_lh.append(df_AvL_rh).round(2)
+# # plots of individual nuclei
+# for l in range(len(dflists)):
+
+#     dfplot=dflists[l]
+#     labels=dfplot.index.str.slice(4).astype(str).tolist()
+#     fig = px.violin(dfplot,x='nucleigroup',y='volume',points="all",
+#                    hover_name=labels,box=True,hover_data=dfplot.columns,color='nucleigroup',
+#                    title='volume of hippdala subnuclei (corrected for ICV)')
+#     fig.update_layout(uniformtext_minsize=14, uniformtext_mode='hide')
+
+#     plotname=dfplot['nucleigroup'].unique()[0][:-3]
+#     fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'hipp_vol_' + plotname + '.html')))
+
+### END OLD CODE ###
 
 
+fig = make_subplots(rows=2, cols=3)
+labels=df_sub.index.str.slice(4).astype(str).tolist()
+fig1= px.violin(df_sub,x='nucleigroup',y='volume',points="all",
+               hover_name=labels,box=True,hover_data=df_sub.columns,color='nucleigroup',
+                   title='')
+fig1.update_layout(uniformtext_minsize=14, uniformtext_mode='hide')
 
-# Anterioventral + lateral
-labels=df_AvL.index.str.slice(4).astype(str).tolist()
-fig= px.violin(df_AvL,x='nucleigroup',y='volume',points="all",
-               hover_name=labels,box=True,hover_data=df_AvL.columns,color='nucleigroup',title='volume of thalamic subnuclei (corrected for ICV)')
-fig.update_layout(uniformtext_minsize=14, uniformtext_mode='hide')
+fig.append_trace(fig1.data[0],1,1)
+fig.append_trace(fig1.data[1],1,2)
+fig.append_trace(fig1.data[2],1,3)
+fig.append_trace(fig1.data[3],2,1)
+fig.append_trace(fig1.data[4],2,2)
+fig.append_trace(fig1.data[5],2,3)
 
-
-fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Thal_vol_AvL.html')))
-
-# Medial + Ventral + Pulvinar
-labels=df_MPV.index.str.slice(4).astype(str).tolist()
-fig= px.violin(df_MPV,x='nucleigroup',y='volume',points="all",
-               hover_name=labels,box=True,hover_data=df_MPV.columns,color='nucleigroup',title='volume of thalamic subnuclei (corrected for ICV)')
-fig.update_layout(uniformtext_minsize=14, uniformtext_mode='hide')
-
-fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Thal_vol_MPV.html')))
+fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'hippocampus_subfield.html')))
 
 
 
 # Difference between Old and New Segmentation of thalamus
-oldnewdiff=df_master.filter(['diff_Right-Thal','diff_Left-Thal']).reset_index().melt(var_name='region',value_name='volume_difference',id_vars=['subject_ID']).set_index('subject_ID').round(3)
+oldnewdiff=df_master.filter(['diff_Right-Hipp','diff_Left-Hipp']).reset_index().melt(var_name='region',
+                                                                                     value_name='volume_difference',id_vars=['subject_ID']).set_index('subject_ID').round(3)
 
 labels=oldnewdiff.index.str.slice(4).astype(str).tolist()
-xticklabels=['left thalamus difference', 'right thalamus difference']
+xticklabels=['left hippocampus difference', 'right hippocampus difference']
 fig= px.violin(oldnewdiff,x='region',y='volume_difference',points="all",
                hover_name=labels,box=True,hover_data=oldnewdiff.columns,color='region',
-                   title='difference in volume between DK standard and Iglesias segmentation of thalamus (uncorrected for ICV)')
+                   title='difference in volume between DK standard and Iglesias segmentation of hippocampus (uncorrected for ICV)')
 fig.update_layout(uniformtext_minsize=14, uniformtext_mode='hide')
-fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Thal_vol_diff_DKvsIgl.html')))
+fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Hipp_vol_diff_DKvsIgl.html')))
 
 # overlap WM and CSF
 overlapWMCSF=df_master.filter(['WM_overlay','CSF_overlay']).reset_index().melt(var_name='compartment',value_name='num_voxels',id_vars=['subject_ID']).set_index('subject_ID')
 
 labels=overlapWMCSF.index.str.slice(4).astype(str).tolist()
-
-
-
 fig = make_subplots(rows=1, cols=2)
-
-
 fig1= px.violin(overlapWMCSF,x='compartment',y='num_voxels',points="all",
                hover_name=labels,box=True,hover_data=overlapWMCSF.columns,color='compartment',
-                   title='Overlap of Iglesias thalamic segmentation with WM and CSF')
+                   title='Overlap of Iglesias hippocampus segmentation with WM and CSF')
 fig1.update_layout(uniformtext_minsize=14, uniformtext_mode='hide')
 
 fig.append_trace(fig1.data[0],1,1)
 fig.append_trace(fig1.data[1],1,2)
 
-fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Thal_vol_overlap_WMCSF.html')))
+fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Hipp_vol_overlap_WMCSF.html')))
 
 
 
@@ -444,15 +453,17 @@ fig.write_html(os.path.join(outputdir,(plotbase + '_' + 'Thal_vol_overlap_WMCSF.
 #  HERE COMES THE RAIN  #
 #########################
 
-dfs=[df_MPV_lh, df_AvL_lh, df_MPV_rh, df_AvL_rh ]
+df1, df2, df3,df4,df5,df6 = [x for _, x in df_sub.groupby(df_sub['nucleigroup'])]
+dfs=[df1,df2,df3,df4,df5,df6]
 
 dy='volume'
 dx='nucleigroup'
 ort="v";
 pal = sns.color_palette(n_colors=3)
 sigma = .3
-fig, axes = plt.subplots(ncols=4,nrows=1,figsize=(23.38, 8.27,))
-fig.suptitle('volume of thalamic subnuclei (corrected for ICV)')
+fig, axes = plt.subplots(ncols=3,nrows=2,figsize=(23.38, 8.27,))
+fig.suptitle('volume of hippocampus subfields (corrected for ICV)')
+
 
 for i, ax in zip(range(len(dfs)), axes.flat):
 
@@ -463,10 +474,10 @@ for i, ax in zip(range(len(dfs)), axes.flat):
     ax.set_title('')
     ax.set_ylabel('mm³')
     ax.set_xlabel('')
-    plt.setp(ax.get_xticklabels(), rotation=20, ha="right", rotation_mode="anchor")
+    #plt.setp(ax.get_xticklabels(), rotation=0, ha="right", rotation_mode="anchor")
 
 plt.subplots_adjust(left=0.125, bottom=0.1, right=0.9, top=0.9, wspace=0.4, hspace=0.2)
 
 
-plt.savefig(os.path.join(outputdir,(plotbase + '_' + 'vol_Thalsubnuclei.pdf')), bbox_inches='tight', format='pdf')
-plt.savefig(os.path.join(outputdir,(plotbase + '_' + 'vol_Thalsubnuclei.png')), dpi=150,bbox_inches='tight', format='png')
+plt.savefig(os.path.join(outputdir,(plotbase + '_' + 'vol_hippsubfields.pdf')), bbox_inches='tight', format='pdf')
+plt.savefig(os.path.join(outputdir,(plotbase + '_' + 'vol_hippsubfields.png')), dpi=150,bbox_inches='tight', format='png')
