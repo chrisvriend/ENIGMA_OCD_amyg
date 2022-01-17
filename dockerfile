@@ -58,14 +58,18 @@ COPY [ "extract_vols_plot_amygdala.py" , "/neurodocker/extract_vols_plot_amygdal
 COPY [ "extract_vols_plot_hippocampus.py" , "/neurodocker/extract_vols_plot_hippocampus.py"]
 
 COPY [ "create_webpages.sh", "/neurodocker/create_webpages.sh"]
-COPY [ "QA_thalseg_v2.sh", "/neurodocker/QA_thalseg.sh"]
-COPY [ "thalseg2html.py", "/neurodocker/thalseg2html.py"]
+COPY [ "QA_amygseg.sh", "/neurodocker/QA_amygseg.sh"]
+COPY [ "QA_hippseg.sh", "/neurodocker/QA_hippseg.sh"]
+
+COPY [ "segmentQA2html.py", "/neurodocker/segmentQA2html.py"]
 
 RUN ["chmod", "+x", "/mainscript.sh"]
 RUN ["chmod", "+x", "/neurodocker/combine_subnuclei.sh"]
-RUN ["chmod", "+x", "/neurodocker/create_webpage_thalsubs.sh"]
-RUN ["chmod", "+x", "/neurodocker/QA_thalseg.sh"]
-RUN ["chmod", "+x", "/neurodocker/thalseg2html.py"]
+RUN ["chmod", "+x", "/neurodocker/create_webpages.sh"]
+RUN ["chmod", "+x", "/neurodocker/QA_amygseg.sh"]
+RUN ["chmod", "+x", "/neurodocker/QA_hippseg.sh"]
+
+RUN ["chmod", "+x", "/neurodocker/segmentQA2html.py"]
 RUN ["chmod", "+x", "/neurodocker/extract_vols_plot_hippocampus.py"]
 RUN ["chmod", "+x", "/neurodocker/extract_vols_plot_amygdala.py"]
 
