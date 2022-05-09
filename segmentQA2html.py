@@ -26,7 +26,7 @@ parser.add_argument('--output', action="store", dest="output", required=True,
                     help='full path to output html file')
 # parse arguments
 args = parser.parse_args()
-seg=args.thal
+seg=args.seg
 brain=args.brain
 output=args.output
 
