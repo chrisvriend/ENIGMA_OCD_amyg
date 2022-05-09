@@ -36,7 +36,7 @@ echo " creating html for amygdala segmentation check of ${subj} "
 
 amygdala=${outputdir}/${subj}/mri/amygdala_template.nii.gz
 brain=${outputdir}/${subj}/mri/brain.nii.gz
-output=${outputdir}/vol+QA/${subj}_thalQC
+output=${outputdir}/vol+QA/${subj}_amygQC
 
 /neurodocker/segmentQA2html.py --seg ${amygdala} --brain ${brain} --output ${output}
 
