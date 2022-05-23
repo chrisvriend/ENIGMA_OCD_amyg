@@ -524,7 +524,10 @@ sleep 2
 echo "creating html files of hippocampal and amygdalar subnuclei segmentations"
 sleep 2
 cd ${outputdir}
-ls -d sub-*/ > subjdirs.txt
+ls -d sub-*/ > temp.txt
+sed 's:/.*::' temp.txt > subjdirs.txt
+rm temp.txt
+
 /neurodocker/QA_amygseg.sh subjdirs.txt
 /neurodocker/QA_hippseg.sh subjdirs.txt
 
