@@ -19,25 +19,20 @@ parser = argparse.ArgumentParser('create html for amygdala or hippocampus subseg
 
 # required arguments
 parser.add_argument('--seg', action="store", dest="seg", required=True,
-                    help='full path to thalamic segmentation')
+                    help='full path to segmentation')
 parser.add_argument('--brain', action="store", dest="brain", required=True,
                     help='full path to MRI brain as background image')
 parser.add_argument('--output', action="store", dest="output", required=True,
                     help='full path to output html file')
 # parse arguments
 args = parser.parse_args()
-seg=args.thal
+seg=args.seg
 brain=args.brain
 output=args.output
 
 
-# test input
-#thal='ThalamicNuclei.v12.T1.FSvoxelSpace_noLMGN.nii.gz'
-#brain='brain.nii.gz'
-#output='test'
 
-
-# overlay thalamic segmentation on T1 brainThalamicNuclei.v12.T1.FSvoxelSpace_noLMGN.nii
+# overlay segmentation on T1
 view=plotting.view_img(seg,
                        bg_img=brain,symmetric_cmap=False,
                        resampling_interpolation='nearest',
@@ -48,9 +43,9 @@ html1=view.get_standalone()
 html1=html1.replace('width="600"','width="2400"')
 html1=html1.replace('height="240"','width="960"')
 
-# make figure of thalamic contours
+# make figure of segmentation contours
 display = plotting.plot_anat(brain, display_mode='tiled',draw_cross=False,)
-display.add_contours(thal,alpha=0.5,levels=[0.5],colors='r',linewidths=0.5)
+display.add_contours(seg,alpha=0.5,levels=[0.5],colors='r',linewidths=0.5)
 
 display.savefig(output + '.png',dpi=300)
 

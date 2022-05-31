@@ -521,6 +521,16 @@ sleep 2
 /neurodocker/extract_vols_plot_hippocampus.py --workdir ${outputdir} --outdir ${outputdir}/vol+QA --outbase ${sample} --plotbase plot_${sample} --segv ${vers}
 /neurodocker/extract_vols_plot_amygdala.py --workdir ${outputdir} --outdir ${outputdir}/vol+QA --outbase ${sample} --plotbase plot_${sample} --segv ${vers}
 
+echo "creating html files of hippocampal and amygdalar subnuclei segmentations"
+sleep 2
+cd ${outputdir}
+ls -d sub-*/ > temp.txt
+sed 's:/.*::' temp.txt > subjdirs.txt
+rm temp.txt
+
+/neurodocker/QA_amygseg.sh subjdirs.txt
+/neurodocker/QA_hippseg.sh subjdirs.txt
+
 else
 
   echo "done processing all ${numsubj} subjects"
